@@ -27,14 +27,14 @@ add_executable( contracts_tests
 )
 
 target_compile_options(contracts_tests PRIVATE 
-    # -fprofile-arcs -ftest-coverage
+    ${COVERAGE_OPTIONS}
     -DEOSIO_NATIVE
     -Wno-unknown-attributes
     -Wno-deprecated-declarations
     -Wno-unused-value
 )
 
-# target_link_options(contracts_tests PRIVATE -fprofile-arcs -ftest-coverage)
+target_link_options(contracts_tests PRIVATE ${COVERAGE_OPTIONS})
 
 target_link_libraries ( contracts_tests
     system_native

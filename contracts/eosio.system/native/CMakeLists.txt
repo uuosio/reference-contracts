@@ -15,8 +15,9 @@ add_library( system_native
 
 set_target_properties(system_native PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
+
 target_compile_options(system_native PRIVATE
-    # -fprofile-arcs -ftest-coverage
+    ${COVERAGE_OPTIONS}
     -DEOSIO_NATIVE
     -Wno-unknown-attributes
     -Wno-deprecated-declarations
@@ -37,7 +38,7 @@ target_include_directories(system_native PUBLIC
     ${CDT_INCLUDE_PATH}
 )
 
-# target_link_options(system_native PRIVATE -fprofile-arcs -ftest-coverage)
+target_link_options(system_native PRIVATE ${COVERAGE_OPTIONS})
 
 target_link_libraries (system_native
     chain_static

@@ -62,4 +62,8 @@ else()
   message(STATUS "Unit tests will not be built. To build unit tests, set BUILD_TESTS to ON.")
 endif()
 
+if (ENABLE_COVERAGE)
+  set(COVERAGE_OPTIONS -fprofile-arcs -ftest-coverage)
+endif()
+
 add_subdirectory(newtests)
