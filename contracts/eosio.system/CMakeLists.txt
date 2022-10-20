@@ -1,3 +1,5 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --fno-post-pass --allow-names")
+
 add_contract(
   eosio.system
   eosio.system

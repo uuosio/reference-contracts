@@ -1,0 +1,4 @@
+
+[submodule "external/cpp-chaintester"]
+	path = external/cpp-chaintester
+	url = https://github.com/uuosio/cpp-chaintester

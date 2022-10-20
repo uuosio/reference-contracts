@@ -58,6 +58,7 @@ namespace eosiosystem {
    }
 
    system_contract::~system_contract() {
+      return;
       _global.set( _gstate, get_self() );
       _global2.set( _gstate2, get_self() );
       _global3.set( _gstate3, get_self() );

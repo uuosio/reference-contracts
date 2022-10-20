@@ -37,7 +37,7 @@ ExternalProject_Add(
   PATCH_COMMAND ""
   TEST_COMMAND ""
   INSTALL_COMMAND ""
-  BUILD_ALWAYS 1)
+  BUILD_ALWAYS 0)
 
 if(APPLE)
   set(OPENSSL_ROOT "/usr/local/opt/openssl")
@@ -61,3 +61,5 @@ if(BUILD_TESTS)
 else()
   message(STATUS "Unit tests will not be built. To build unit tests, set BUILD_TESTS to ON.")
 endif()
+
+add_subdirectory(newtests)

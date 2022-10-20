@@ -1,0 +1,10 @@
+#pragma once
+
+#define SYSTEM_WASM "@CMAKE_BINARY_DIR@/contracts/eosio.system/eosio.system.wasm"
+#define SYSTEM_ABI "@CMAKE_BINARY_DIR@/contracts/eosio.system/eosio.system.abi"
+
+#define ACTIVATE_WASM "@CMAKE_BINARY_DIR@/tests2/contracts/activate/activate.wasm"
+#define ACTIVATE_ABI "@CMAKE_BINARY_DIR@/tests2/contracts/activate/activate.abi"
+
+#define BIOS_WASM "@CMAKE_BINARY_DIR@/contracts/eosio.bios/eosio.bios.wasm"
+#define BIOS_ABI "@CMAKE_BINARY_DIR@/contracts/eosio.bios/eosio.bios.abi"
