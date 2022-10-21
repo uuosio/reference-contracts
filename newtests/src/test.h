@@ -7,7 +7,12 @@
 using namespace std;
 
 #ifdef __cplusplus
-    extern "C" void system_native_apply( uint64_t receiver, uint64_t code, uint64_t action );
+
+extern "C" {
+    void system_native_apply( uint64_t receiver, uint64_t code, uint64_t action );
+    void token_native_apply( uint64_t receiver, uint64_t code, uint64_t action );
+}
+
 #endif
 
 
@@ -30,15 +35,18 @@ static uint64_t TEST_METHOD(const char* CLASS, const char *METHOD) {
   return ( (uint64_t(DJBH(CLASS))<<32) | uint32_t(DJBH(METHOD)) );
 }
 
-static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const string& account, uint64_t action, const vector<char>& data, const string& required_exception_type="", const string& exception_message="") {
+static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const string& account, uint64_t action, const vector<char>& data, const string& signer, const string& required_exception_type="", const string& exception_message="") {
     auto permissions = R""""(
     {
-        "testapi": "active"
+        "%s": "active"
     }
     )"""";
-    
+
+    char _permissions[strlen(permissions) + 13 + 1];
+    snprintf(_permissions, sizeof(_permissions), permissions, signer.c_str());
+
     try {
-        auto ret = tester.push_action(account, n2s(action), hex_str((uint8_t*)data.data(), data.size()), permissions);
+        auto ret = tester.push_action(account, n2s(action), hex_str((uint8_t*)data.data(), data.size()), string(_permissions));
         REQUIRE(!ret->HasMember("except"));
         return ret;
     } catch(chain_exception& ex) {
@@ -65,6 +73,10 @@ static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const strin
 #define CALL_TEST_FUNCTION(_TESTER, CLS, MTH, DATA) CallFunction(_TESTER, "testapi", TEST_METHOD(CLS, MTH), DATA)
 #define CALL_TEST_FUNCTION_AND_CHECK_EXCEPTION(_TESTER, CLS, MTH, DATA, EXCEPT_TYPE, EXCEPT_MSG) CallFunction(_TESTER, "testapi", TEST_METHOD(CLS, MTH), DATA, EXCEPT_TYPE, EXCEPT_MSG)
 #define CALL_TEST_FUNCTION_CHECK_ASSERT_EXCEPTION(_TESTER, CLS, MTH, DATA, EXCEPT_MSG) CallFunction(_TESTER, "testapi", TEST_METHOD(CLS, MTH), DATA, "eosio_assert_message_exception", EXCEPT_MSG)
+
+#define CALL_ACTION(_TESTER, CONTRACT, ACTION, DATA, SIGNER) CallFunction(_TESTER, CONTRACT, eosio::name(ACTION).value, DATA, SIGNER)
+#define CALL_ACTION_AND_CHECK_EXCEPTION(_TESTER, CONTRACT, ACTION, SIGNER, EXCEPT_TYPE, EXCEPT_MSG) CallFunction(_TESTER, CONTRACT, eosio::name(ACTION).value, DATA, SIGNER, EXCEPT_TYPE, EXCEPT_MSG)
+#define CALL_ACTION_CHECK_ASSERT_EXCEPTION(_TESTER, CONTRACT, ACTION, DATA, SIGNER, EXCEPT_MSG) CallFunction(_TESTER, CONTRACT, eosio::name(ACTION).value, DATA, SIGNER, "eosio_assert_message_exception", EXCEPT_MSG)
 
 string I64Str(int64_t i);
 string U64Str(uint64_t i);

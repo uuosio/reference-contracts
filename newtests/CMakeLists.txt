@@ -2,6 +2,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/cpp-chaintester ${CMAKE_BINARY_DIR}/external/cpp-chaintester)
 add_subdirectory(${CMAKE_SOURCE_DIR}/contracts/eosio.system/native ${CMAKE_BINARY_DIR}/contracts/eosio.system/native)
+add_subdirectory(${CMAKE_SOURCE_DIR}/contracts/eosio.token/native ${CMAKE_BINARY_DIR}/contracts/eosio.token/native)
 
 include(ExternalProject)
 # if no cdt root is given use default path
@@ -23,6 +24,7 @@ ExternalProject_Add(
 
 add_executable( contracts_tests 
     src/test_system.cpp
+    src/test_token.cpp
     src/main.cpp
 )
 
@@ -38,6 +40,7 @@ target_link_options(contracts_tests PRIVATE ${COVERAGE_OPTIONS})
 
 target_link_libraries ( contracts_tests
     system_native
+    token_native
     chaintester
 )
 

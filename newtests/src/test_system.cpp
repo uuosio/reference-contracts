@@ -42,7 +42,7 @@ void update_auth(ChainTester& t, string pub_key) {
 
 TEST_CASE( "test chain", "[chain]" ) {
     ChainTester t(false);
-    set_apply(system_native_apply);
+    set_native_apply(system_native_apply);
 
     t.enable_debug_contract("eosio", false);
 
@@ -180,7 +180,7 @@ TEST_CASE( "test chain", "[chain]" ) {
 
 TEST_CASE( "test system", "[chain]" ) {
     ChainTester t(false);
-    set_apply(system_native_apply);
+    set_native_apply(system_native_apply);
 
     t.enable_debug_contract("eosio", false);
 

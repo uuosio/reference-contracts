@@ -8,3 +8,6 @@
 
 #define BIOS_WASM "@CMAKE_BINARY_DIR@/contracts/eosio.bios/eosio.bios.wasm"
 #define BIOS_ABI "@CMAKE_BINARY_DIR@/contracts/eosio.bios/eosio.bios.abi"
+
+#define TOKEN_WASM "@CMAKE_BINARY_DIR@/contracts/eosio.token/eosio.token.wasm"
+#define TOKEN_ABI "@CMAKE_BINARY_DIR@/contracts/eosio.token/eosio.token.abi"
