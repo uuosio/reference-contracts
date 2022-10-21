@@ -35,7 +35,10 @@ static uint64_t TEST_METHOD(const char* CLASS, const char *METHOD) {
   return ( (uint64_t(DJBH(CLASS))<<32) | uint32_t(DJBH(METHOD)) );
 }
 
-static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const string& account, uint64_t action, const vector<char>& data, const string& signer, const string& required_exception_type="", const string& exception_message="") {
+template<typename Arguments>
+static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const string& account, uint64_t action, const Arguments& args, const string& signer, const string& required_exception_type="", const string& exception_message="") {
+    auto data = eosio::pack(args);
+
     auto permissions = R""""(
     {
         "%s": "active"
@@ -77,6 +80,7 @@ static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const strin
 #define CALL_ACTION(_TESTER, CONTRACT, ACTION, DATA, SIGNER) CallFunction(_TESTER, CONTRACT, eosio::name(ACTION).value, DATA, SIGNER)
 #define CALL_ACTION_AND_CHECK_EXCEPTION(_TESTER, CONTRACT, ACTION, SIGNER, EXCEPT_TYPE, EXCEPT_MSG) CallFunction(_TESTER, CONTRACT, eosio::name(ACTION).value, DATA, SIGNER, EXCEPT_TYPE, EXCEPT_MSG)
 #define CALL_ACTION_CHECK_ASSERT_EXCEPTION(_TESTER, CONTRACT, ACTION, DATA, SIGNER, EXCEPT_MSG) CallFunction(_TESTER, CONTRACT, eosio::name(ACTION).value, DATA, SIGNER, "eosio_assert_message_exception", EXCEPT_MSG)
+
 
 string I64Str(int64_t i);
 string U64Str(uint64_t i);

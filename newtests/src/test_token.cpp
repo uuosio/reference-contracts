@@ -69,7 +69,7 @@ TEST_CASE( "create_negative_max_supply", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "create",
-        pack(std::make_tuple("alice"_n, asset(-1000000, symbol("TKN", 4)))),
+        std::make_tuple("alice"_n, asset(-1000000, symbol("TKN", 4))),
         "eosio.token", "max-supply must be positive"
     );
 }
@@ -88,7 +88,7 @@ TEST_CASE( "symbol_already_exists", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "create",
-        pack(std::make_tuple("alice"_n, asset(100, symbol("TKN", 0)))),
+        std::make_tuple("alice"_n, asset(100, symbol("TKN", 0))),
         "eosio.token", "token with symbol already exists"
     );
 }
@@ -117,7 +117,7 @@ TEST_CASE( "create_max_supply", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "create",
-        pack(std::make_tuple("alice"_n, max)),
+        std::make_tuple("alice"_n, max),
         "eosio.token",
         "invalid supply" //"magnitude of asset amount must be less than 2^62"
     );
@@ -148,7 +148,7 @@ TEST_CASE( "create_max_decimals", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "create",
-        pack(std::make_tuple("alice"_n, max)),
+        std::make_tuple("alice"_n, max),
         "eosio.token",
         "invalid supply" //"magnitude of asset amount must be less than 2^62"
     );
@@ -161,7 +161,7 @@ TEST_CASE( "issue_tests", "eosio_token_tester" ) {
     t.produce_block();
 
 //    issue( "alice"_n, asset::from_string("500.000 TKN"), "hola" );
-    CALL_ACTION(t, "eosio.token", "issue", eosio::pack(std::make_tuple("alice"_n, asset(500000, symbol("TKN", 3)), string("hola"))), "alice");
+    CALL_ACTION(t, "eosio.token", "issue", std::make_tuple("alice"_n, asset(500000, symbol("TKN", 3)), string("hola")), "alice");
 
     auto rows = t.get_table_rows(true, "eosio.token", "TKN", "stat", "TKN", "", 1);
     CHECK(rows->get_string("rows", 0, "data") == R"({"supply":"500.000 TKN","max_supply":"1000.000 TKN","issuer":"alice"})");
@@ -172,7 +172,7 @@ TEST_CASE( "issue_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "issue",
-        eosio::pack(std::make_tuple("alice"_n, asset(500001, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple("alice"_n, asset(500001, symbol("TKN", 3)), string("hola")),
         "alice",
         "quantity exceeds available supply"
     );
@@ -181,7 +181,7 @@ TEST_CASE( "issue_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "issue",
-        eosio::pack(std::make_tuple("alice"_n, asset(-1000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple("alice"_n, asset(-1000, symbol("TKN", 3)), string("hola")),
         "alice",
         "must issue positive quantity"
     );
@@ -190,7 +190,7 @@ TEST_CASE( "issue_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "issue",
-        eosio::pack(std::make_tuple("alice"_n, asset(1000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple("alice"_n, asset(1000, symbol("TKN", 3)), string("hola")),
         "alice"
     );
 }
@@ -202,13 +202,13 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
     create(t, "alice"_n, asset(1000000, symbol("TKN", 3)));
     t.produce_block();
 
-    CALL_ACTION(t, "eosio.token", "issue", eosio::pack(std::make_tuple("alice"_n, asset(500000, symbol("TKN", 3)), string("hola"))), "alice");
+    CALL_ACTION(t, "eosio.token", "issue", std::make_tuple("alice"_n, asset(500000, symbol("TKN", 3)), string("hola")), "alice");
     auto rows = t.get_table_rows(true, "eosio.token", "TKN", "stat", "TKN", "", 1);
     CHECK(rows->get_string("rows", 0, "data") == R"({"supply":"500.000 TKN","max_supply":"1000.000 TKN","issuer":"alice"})");
     WARN(t.get_account("alice")->to_string());
     CHECK(t.get_balance("alice", "eosio.token", "TKN") == 500000);
 
-    CALL_ACTION(t, "eosio.token", "retire", eosio::pack(std::make_tuple(asset(200000, symbol("TKN", 3)), string("hola"))), "alice");
+    CALL_ACTION(t, "eosio.token", "retire", std::make_tuple(asset(200000, symbol("TKN", 3)), string("hola")), "alice");
     rows = t.get_table_rows(true, "eosio.token", "TKN", "stat", "TKN", "", 1);
     CHECK(rows->get_string("rows", 0, "data") == R"({"supply":"300.000 TKN","max_supply":"1000.000 TKN","issuer":"alice"})");
     WARN(t.get_account("alice")->to_string());
@@ -219,7 +219,7 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "retire",
-        eosio::pack(std::make_tuple(asset(500000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple(asset(500000, symbol("TKN", 3)), string("hola")),
         "alice",
         "overdrawn balance"
     );
@@ -229,7 +229,7 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "transfer",
-        eosio::pack(std::make_tuple("alice"_n, "bob"_n, asset(200000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple("alice"_n, "bob"_n, asset(200000, symbol("TKN", 3)), string("hola")),
         "alice"
     );
 
@@ -239,7 +239,7 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "retire",
-        eosio::pack(std::make_tuple(asset(300000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple(asset(300000, symbol("TKN", 3)), string("hola")),
         "alice",
         "overdrawn balance"
     );
@@ -249,7 +249,7 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "transfer",
-        eosio::pack(std::make_tuple("bob"_n, "alice"_n, asset(200000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple("bob"_n, "alice"_n, asset(200000, symbol("TKN", 3)), string("hola")),
         "bob"
     );
 
@@ -258,7 +258,7 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "retire",
-        eosio::pack(std::make_tuple(asset(300000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple(asset(300000, symbol("TKN", 3)), string("hola")),
         "alice"
     );
 
@@ -273,7 +273,7 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "retire",
-        eosio::pack(std::make_tuple(asset(1000, symbol("TKN", 3)), string("hola"))),
+        std::make_tuple(asset(1000, symbol("TKN", 3)), string("hola")),
         "alice",
         "overdrawn balance"
     );
@@ -285,13 +285,13 @@ TEST_CASE( "transfer_tests", "eosio_token_tester" ) {
 
     create(t, "alice"_n, asset(1000, symbol("CERO", 0)));
     t.produce_block();
-    CALL_ACTION(t, "eosio.token", "issue", pack(std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string("hola"))), "alice");
+    CALL_ACTION(t, "eosio.token", "issue", std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string("hola")), "alice");
     auto rows = t.get_table_rows(true, "eosio.token", "CERO", "stat", "CERO", "", 1);
     CHECK(rows->get_string("rows", 0, "data") == R"({"supply":"1000 CERO","max_supply":"1000 CERO","issuer":"alice"})");
     WARN(t.get_account("alice")->to_string());
     CHECK(t.get_balance("alice", "eosio.token", "CERO") == 1000);
 
-    CALL_ACTION(t, "eosio.token", "transfer", pack(std::make_tuple("alice"_n, "bob"_n, asset(300, symbol("CERO", 0)), string("hola"))), "alice");
+    CALL_ACTION(t, "eosio.token", "transfer", std::make_tuple("alice"_n, "bob"_n, asset(300, symbol("CERO", 0)), string("hola")), "alice");
     CHECK(t.get_balance("alice", "eosio.token", "CERO") == 700);
     CHECK(t.get_balance("bob", "eosio.token", "CERO") == 300);
 
@@ -299,7 +299,7 @@ TEST_CASE( "transfer_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "transfer",
-        eosio::pack(std::make_tuple("alice"_n, "bob"_n, asset(701, symbol("CERO", 0)), string("hola"))),
+        std::make_tuple("alice"_n, "bob"_n, asset(701, symbol("CERO", 0)), string("hola")),
         "alice",
         "overdrawn balance"
     );
@@ -308,7 +308,7 @@ TEST_CASE( "transfer_tests", "eosio_token_tester" ) {
         t,
         "eosio.token",
         "transfer",
-        eosio::pack(std::make_tuple("alice"_n, "bob"_n, asset(-1000, symbol("CERO", 0)), string("hola"))),
+        std::make_tuple("alice"_n, "bob"_n, asset(-1000, symbol("CERO", 0)), string("hola")),
         "alice",
         "must transfer positive quantity"
     );
@@ -325,7 +325,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION_CHECK_ASSERT_EXCEPTION(t,
         "eosio.token",
         "issue",
-        pack(std::make_tuple("bob"_n, asset(1000, symbol("CERO", 0)), string(""))),
+        std::make_tuple("bob"_n, asset(1000, symbol("CERO", 0)), string("")),
         "alice",
         "tokens can only be issued to issuer account"
     );
@@ -334,7 +334,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION(t,
         "eosio.token",
         "issue",
-        pack(std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string(""))),
+        std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string("")),
         "alice"
     );
     CHECK(t.get_balance("alice", "eosio.token", "CERO") == 1000);
@@ -347,7 +347,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION_CHECK_ASSERT_EXCEPTION(t,
         "eosio.token",
         "open",
-        pack(std::make_tuple("nonexistent"_n, symbol("CERO", 0), "alice"_n)),
+        std::make_tuple("nonexistent"_n, symbol("CERO", 0), "alice"_n),
         "alice",
         "owner account does not exist"
     );
@@ -356,7 +356,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION(t,
         "eosio.token",
         "open",
-        pack(std::make_tuple("bob"_n, symbol("CERO", 0), "alice"_n)),
+        std::make_tuple("bob"_n, symbol("CERO", 0), "alice"_n),
         "alice"
     );
 
@@ -370,7 +370,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION(t,
         "eosio.token",
         "transfer",
-        pack(std::make_tuple("alice"_n, "bob"_n, asset(200, symbol("CERO", 0)), string("hola"))),
+        std::make_tuple("alice"_n, "bob"_n, asset(200, symbol("CERO", 0)), string("hola")),
         "alice"
     );
 
@@ -385,7 +385,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION_CHECK_ASSERT_EXCEPTION(t,
         "eosio.token",
         "open",
-        pack(std::make_tuple("carol"_n, symbol("INVALID", 0), "alice"_n)),
+        std::make_tuple("carol"_n, symbol("INVALID", 0), "alice"_n),
         "alice",
         "symbol does not exist"
     );
@@ -395,7 +395,7 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CALL_ACTION_CHECK_ASSERT_EXCEPTION(t,
         "eosio.token",
         "open",
-        pack(std::make_tuple("carol"_n, symbol("CERO", 1), "alice"_n)),
+        std::make_tuple("carol"_n, symbol("CERO", 1), "alice"_n),
         "alice",
         "symbol precision mismatch"
     );
@@ -419,7 +419,7 @@ TEST_CASE( "close_tests", "eosio_token_tester" ) {
     CALL_ACTION(t,
         "eosio.token",
         "issue",
-        pack(std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string(""))),
+        std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string("")),
         "alice"
     );
     CHECK(t.get_balance("alice", "eosio.token", "CERO") == 1000);
@@ -428,7 +428,7 @@ TEST_CASE( "close_tests", "eosio_token_tester" ) {
     CALL_ACTION(t,
         "eosio.token",
         "transfer",
-        pack(std::make_tuple("alice"_n, "bob"_n, asset(1000, symbol("CERO", 0)), string("hola"))),
+        std::make_tuple("alice"_n, "bob"_n, asset(1000, symbol("CERO", 0)), string("hola")),
         "alice"
     );
 
@@ -442,7 +442,7 @@ TEST_CASE( "close_tests", "eosio_token_tester" ) {
     CALL_ACTION(t,
         "eosio.token",
         "close",
-        pack(std::make_tuple("alice"_n, symbol("CERO", 0))),
+        std::make_tuple("alice"_n, symbol("CERO", 0)),
         "alice"
     );
 
