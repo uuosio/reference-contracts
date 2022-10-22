@@ -46,21 +46,9 @@ target_link_libraries ( contracts_tests
 )
 
 add_dependencies(contracts_tests chaintester)
-
-set(CDT_INCLUDE_PATH
-    ${CMAKE_SOURCE_DIR}/external/cpp-chaintester/libs/cdt/include
-    ${CMAKE_SOURCE_DIR}/external/cpp-chaintester/libs/cdt/include/eosiolib/capi
-    ${CMAKE_SOURCE_DIR}/external/cpp-chaintester/libs/cdt/include/eosiolib/native
-    ${CMAKE_SOURCE_DIR}/external/cpp-chaintester/libs/cdt/include/eosiolib/core
-    ${CMAKE_SOURCE_DIR}/external/cpp-chaintester/libs/cdt/include/eosiolib/contracts
-)
-
 target_include_directories(contracts_tests PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_BINARY_DIR}"
-    ${CDT_INCLUDE_PATH}
-    "${CMAKE_SOURCE_DIR}/external/cpp-chaintester/libs/Catch2/src"
-    "${CMAKE_SOURCE_DIR}/external/cpp-chaintester/chaintester/src"
     "${CMAKE_BINARY_DIR}/generated-includes"
 )
 
