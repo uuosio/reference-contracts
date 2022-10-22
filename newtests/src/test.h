@@ -37,27 +37,26 @@ static uint64_t TEST_METHOD(const char* CLASS, const char *METHOD) {
 
 template<typename Arguments>
 static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const string& account, uint64_t action, const Arguments& args, const string& signer, const string& required_exception_type="", const string& exception_message="") {
-    auto data = eosio::pack(args);
     try {
-        auto ret = tester.push_action(name(account), name(action), data, name(signer));
+        auto ret = tester.push_action(name(account), name(action), args, name(signer));
         REQUIRE(!ret->HasMember("except"));
         return ret;
     } catch(chain_exception& ex) {
         auto& o = ex.value();
-        REQUIRE(o.HasMember("except"));
+        CHECK(o.HasMember("except"));
         auto& except = o["except"];
         WARN(o.to_string());
-        REQUIRE(except["name"].GetString() == required_exception_type);
+        CHECK(except["name"].GetString() == required_exception_type);
         if ("wasm_execution_error" == required_exception_type) {
             auto s =  except["stack"][0]["format"].GetString();
-            REQUIRE(string(s).find(exception_message) != std::string::npos);
+            CHECK(string(s).find(exception_message) != std::string::npos);
         } else if ("eosio_assert_message_exception" == required_exception_type) {
             auto s =  except["stack"][0]["data"]["s"].GetString();
-            REQUIRE(string(s).find(exception_message) != std::string::npos);
+            CHECK(string(s).find(exception_message) != std::string::npos);
         } else {
             auto s =  except["stack"][0]["format"].GetString();
             WARN(s);
-            REQUIRE(string(s).find(exception_message) != std::string::npos);
+            CHECK(string(s).find(exception_message) != std::string::npos);
         }
         return std::make_shared<JsonObject>(o.to_string());
     }
