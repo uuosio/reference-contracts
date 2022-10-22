@@ -38,18 +38,8 @@ static uint64_t TEST_METHOD(const char* CLASS, const char *METHOD) {
 template<typename Arguments>
 static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const string& account, uint64_t action, const Arguments& args, const string& signer, const string& required_exception_type="", const string& exception_message="") {
     auto data = eosio::pack(args);
-
-    auto permissions = R""""(
-    {
-        "%s": "active"
-    }
-    )"""";
-
-    char _permissions[strlen(permissions) + 13 + 1];
-    snprintf(_permissions, sizeof(_permissions), permissions, signer.c_str());
-
     try {
-        auto ret = tester.push_action(account, n2s(action), hex_str((uint8_t*)data.data(), data.size()), string(_permissions));
+        auto ret = tester.push_action(name(account), name(action), data, name(signer));
         REQUIRE(!ret->HasMember("except"));
         return ret;
     } catch(chain_exception& ex) {

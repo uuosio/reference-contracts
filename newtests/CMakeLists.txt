@@ -25,6 +25,7 @@ ExternalProject_Add(
 add_executable( contracts_tests 
     src/test_system.cpp
     src/test_token.cpp
+    src/base58.cpp
     src/main.cpp
 )
 
