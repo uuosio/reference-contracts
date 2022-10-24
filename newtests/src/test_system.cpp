@@ -4,9 +4,10 @@
 #include <eosio/asset.hpp>
 #include <eosio/crypto.hpp>
 
-#include "permission.hpp"
+#include <chaintester/chaintester.hpp>
+#include <chaintester/permission.hpp>
+#include <chaintester/base58.hpp>
 
-#include "base58.hpp"
 #include "config.hpp"
 #include "test.h"
 
@@ -159,7 +160,9 @@ TEST_CASE( "test system", "[chain]" ) {
     };
 
     for (auto& digest: feature_digests) {
-        auto ret = t.push_action("eosio"_n, "activate"_n, hex2bytes(digest), "eosio"_n);
+        auto raw = hex2bytes(digest);
+        t.new_action("eosio"_n, "activate"_n, "eosio"_n).send_raw(raw);
+        // auto ret = t.push_action("eosio"_n, "activate"_n, hex2bytes(digest), "eosio"_n);
     }
     t.produce_block();
 

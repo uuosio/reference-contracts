@@ -1,7 +1,5 @@
 #include <stdint.h>
-#include <catch2/catch_test_macros.hpp>
-#include "chaintester.h"
-#include "utils.h"
+#include <chaintester/chaintester.hpp>
 #include "generated.h"
 
 using namespace std;
@@ -41,11 +39,11 @@ static std::shared_ptr<JsonObject> CallFunction(ChainTester& tester, const strin
         auto ret = tester.push_action(name(account), name(action), args, name(signer));
         REQUIRE(!ret->HasMember("except"));
         return ret;
-    } catch(chain_exception& ex) {
+    } catch(ChainException& ex) {
         auto& o = ex.value();
         CHECK(o.HasMember("except"));
         auto& except = o["except"];
-        WARN(o.to_string());
+        // WARN(o.to_string());
         CHECK(except["name"].GetString() == required_exception_type);
         if ("wasm_execution_error" == required_exception_type) {
             auto s =  except["stack"][0]["format"].GetString();
