@@ -132,9 +132,8 @@ void basic_setup(ChainTester& t) {
 TEST_CASE( "test system", "[chain]" ) {
     ChainTester t(false);
     set_native_apply(system_native_apply);
-    t.enable_debug_contract("eosio"_n, false);
+    t.enable_debug_contract("eosio"_n, true);
     basic_setup(t);
-    return;
 
     t.deploy_contract("eosio"_n, ACTIVATE_WASM, ACTIVATE_ABI);
 

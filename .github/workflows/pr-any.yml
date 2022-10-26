@@ -61,8 +61,8 @@ jobs:
           cd build
           CXX=clang++ CC=clang cmake -DENABLE_COVERAGE=TRUE -DCMAKE_BUILD_TYPE=Debug -Dcdt_DIR=`cdt-get-dir` -GNinja ..
           ninja --verbose
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
       - name: test
         run: |
           cd build
