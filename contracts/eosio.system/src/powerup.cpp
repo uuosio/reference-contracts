@@ -110,7 +110,7 @@ void update_utilization(time_point_sec now, powerup_state_resource& res) {
    } else {
       int64_t diff  = res.adjusted_utilization - res.utilization;
       int64_t delta = diff * std::exp(-double(now.utc_seconds - res.utilization_timestamp.utc_seconds) / double(res.decay_secs));
-      delta = std::clamp( delta, 0ll, diff);
+      delta = std::clamp( delta, int64_t(0), diff);
       res.adjusted_utilization = res.utilization + delta;
    }
    res.utilization_timestamp = now;
