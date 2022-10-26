@@ -168,5 +168,6 @@ TEST_CASE( "test system", "[chain]" ) {
     t.enable_debug_contract("eosio"_n, true);
 
     t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
+    t.push_action("eosio"_n, "init"_n, std::make_tuple(unsigned_int(0), core_symbol), "eosio"_n);
     t.produce_block();
 }
