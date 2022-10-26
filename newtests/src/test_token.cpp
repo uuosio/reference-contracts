@@ -27,14 +27,14 @@ void init_test(ChainTester& t) {
     auto auth = create_authority("EOS6AjF6hvF7GSuSd4sCgfPKq5uWaXvGM2aQtEUCwmEHygQaqxBSV");
 
     for (auto& account: { "alice"_n, "bob"_n, "carol"_n, "eosio.token"_n }) {
-        t.push_action("eosio"_n, "newaccount"_n, std::make_tuple("eosio"_n, account, auth, auth), "eosio"_n);
+        t.push_action("eosio"_n, "eosio"_n, "newaccount"_n, std::make_tuple("eosio"_n, account, auth, auth));
     }
     t.deploy_contract("eosio.token"_n, TOKEN_WASM, TOKEN_ABI);
     t.produce_block();
 }
 
 std::shared_ptr<JsonObject> create(ChainTester& t, name issuer, asset maximum_supply ) {
-    return t.push_action( "eosio.token"_n, "create"_n, std::make_tuple(issuer, maximum_supply), "eosio.token"_n );
+    return t.push_action("eosio.token"_n, "eosio.token"_n, "create"_n, std::make_tuple(issuer, maximum_supply));
 }
 
 TEST_CASE( "create_tests", "eosio_token_tester" ) {
@@ -255,14 +255,12 @@ TEST_CASE( "retire_tests", "eosio_token_tester" ) {
 
 //    //trying to retire tokens with zero supply
 //    BOOST_REQUIRE_EQUAL( wasm_assert_msg("overdrawn balance"), retire( "alice"_n, asset::from_string("1.000 TKN"), "hola" ) );
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "retire"_n,
-        "alice"_n
-    ).send_and_catch_exception(
-        asset(1000, symbol("TKN", 3)),
-        string("hola")
-    ).require_assertion("overdrawn balance");
+        std::make_tuple(asset(1000, symbol("TKN", 3)), string("hola"))
+    ).send_and_catch_exception().require_assertion("overdrawn balance");
 }
 
 TEST_CASE( "transfer_tests", "eosio_token_tester" ) {
@@ -272,48 +270,40 @@ TEST_CASE( "transfer_tests", "eosio_token_tester" ) {
     create(t, "alice"_n, asset(1000, symbol("CERO", 0)));
     t.produce_block();
 
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "issue"_n,
-        "alice"_n
-    ).send("alice"_n, asset(1000, symbol("CERO", 0)), string("hola"));
-
+        std::make_tuple("alice"_n, asset(1000, symbol("CERO", 0)), string("hola"))
+    ).send();
     auto rows = t.get_table_rows(true, "eosio.token"_n, name(symbol_code("CERO").raw()), "stat"_n, name(symbol_code("CERO").raw()), name(), 1);
     CHECK(rows->get_string("rows", 0, "data") == R"({"supply":"1000 CERO","max_supply":"1000 CERO","issuer":"alice"})");
     // WARN(t.get_account("alice"_n)->to_string());
     CHECK(t.get_balance("alice"_n, "eosio.token"_n, "CERO") == 1000);
 
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "transfer"_n,
-        "alice"_n
-    ).send("alice"_n, "bob"_n, asset(300, symbol("CERO", 0)), string("hola"));
+        "alice"_n, "bob"_n, asset(300, symbol("CERO", 0)), string("hola")
+    ).send();
 
     CHECK(t.get_balance("alice"_n, "eosio.token"_n, "CERO") == 700);
     CHECK(t.get_balance("bob"_n, "eosio.token"_n, "CERO") == 300);
 
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "transfer"_n,
-        "alice"_n
-    ).send_and_catch_exception(
-        "alice"_n,
-        "bob"_n,
-        asset(701, symbol("CERO", 0)),
-        string("hola")
-    ).require_assertion("overdrawn balance");
-
+        std::make_tuple("alice"_n, "bob"_n, asset(701, symbol("CERO", 0)), string("hola"))
+    ).send_and_catch_exception().require_assertion("overdrawn balance");
     
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "transfer"_n,
-        "alice"_n
-    ).send_and_catch_exception(
-        "alice"_n,
-        "bob"_n,
-        asset(-1000, symbol("CERO", 0)),
-        string("hola")
-    ).require_assertion("must transfer positive quantity");
+        std::make_tuple("alice"_n, "bob"_n, asset(-1000, symbol("CERO", 0)), string("hola"))
+    ).send_and_catch_exception().require_assertion("must transfer positive quantity");
 }
 
 TEST_CASE( "open_tests", "eosio_token_tester" ) {
@@ -324,36 +314,44 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     t.produce_block();
     CHECK(t.get_balance("alice"_n, "eosio.token"_n, "CERO") == 0);
 
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "issue"_n,
-        "alice"_n
-    ).send_and_catch_exception(
-        "bob"_n,
-        asset(1000, symbol("CERO", 0)),
-        string("")
-    ).require_assertion("tokens can only be issued to issuer account");
+        std::make_tuple(
+            "bob"_n,
+            asset(1000, symbol("CERO", 0)),
+            string("")
+        )
+    ).send_and_catch_exception().require_assertion("tokens can only be issued to issuer account");
 
     // BOOST_REQUIRE_EQUAL( success(), issue( "alice"_n, asset::from_string("1000 CERO"), "issue" ) );
-    t.new_action("eosio.token"_n, "issue"_n, "alice"_n).send("alice"_n, asset(1000, symbol("CERO", 0)), string(""));
+    t.new_action_sender().add_action(
+        "alice"_n,
+        "eosio.token"_n,
+        "issue"_n,
+        "alice"_n, asset(1000, symbol("CERO", 0)), string("")
+    ).send();
 
     CHECK(t.get_balance("alice"_n, "eosio.token"_n, "CERO") == 1000);
     CHECK(t.get_balance("bob"_n, "eosio.token"_n, "CERO") == 0);
 
     // BOOST_REQUIRE_EQUAL( wasm_assert_msg("owner account does not exist"),
     //                     open( "nonexistent"_n, "0,CERO", "alice"_n ) );
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "open"_n,
-        "alice"_n
-    ).send_and_catch_exception(
-        "nonexistent"_n,
-        symbol("CERO", 0),
-        "alice"_n
-    ).require_assertion("owner account does not exist");
+        "nonexistent"_n, symbol("CERO", 0), "alice"_n
+    ).send_and_catch_exception().require_assertion("owner account does not exist");
     // BOOST_REQUIRE_EQUAL( success(),
     //                     open( "bob"_n,         "0,CERO", "alice"_n ) );
-    t.new_action("eosio.token"_n, "open"_n, "alice"_n).send("bob"_n, symbol("CERO", 0), "alice"_n);
+    t.new_action_sender().add_action(
+        "alice"_n,
+        "eosio.token"_n,
+        "open"_n,
+        std::make_tuple("bob"_n, symbol("CERO", 0), "alice"_n)
+    ).send();
     // bob_balance = get_account("bob"_n, "0,CERO");
     // REQUIRE_MATCHING_OBJECT( bob_balance, mvo()
     //     ("balance", "0 CERO")
@@ -361,7 +359,12 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
     CHECK(t.get_balance("bob"_n, "eosio.token"_n, "CERO") == 0);
 
     // BOOST_REQUIRE_EQUAL( success(), transfer( "alice"_n, "bob"_n, asset::from_string("200 CERO"), "hola" ) );
-    t.new_action("eosio.token"_n, "transfer"_n, "alice"_n).send("alice"_n, "bob"_n, asset(200, symbol("CERO", 0)), string("hola"));
+    t.new_action_sender().add_action(
+        "alice"_n,
+        "eosio.token"_n,
+        "transfer"_n,
+        std::make_tuple("alice"_n, "bob"_n, asset(200, symbol("CERO", 0)), string("hola"))
+    ).send();
     // bob_balance = get_account("bob"_n, "0,CERO");
     // REQUIRE_MATCHING_OBJECT( bob_balance, mvo()
     //     ("balance", "200 CERO")
@@ -370,27 +373,23 @@ TEST_CASE( "open_tests", "eosio_token_tester" ) {
 
     // BOOST_REQUIRE_EQUAL( wasm_assert_msg( "symbol does not exist" ),
     //                     open( "carol"_n, "0,INVALID", "alice"_n ) );
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "open"_n,
-        "alice"_n
-    ).send_and_catch_exception(
-        "carol"_n,
-        symbol("INVALID", 0),
-        "alice"_n
-    ).require_assertion("symbol does not exist");
+        "carol"_n, symbol("INVALID", 0), "alice"_n
+    ).send_and_catch_exception().require_assertion("symbol does not exist");
 
     // BOOST_REQUIRE_EQUAL( wasm_assert_msg( "symbol precision mismatch" ),
     //                     open( "carol"_n, "1,CERO", "alice"_n ) );
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "open"_n,
-        "alice"_n
-    ).send_and_catch_exception(
         "carol"_n,
         symbol("CERO", 1),
         "alice"_n
-    ).require_assertion("symbol precision mismatch");
+    ).send_and_catch_exception().require_assertion("symbol precision mismatch");
 }
 
 TEST_CASE( "close_tests", "eosio_token_tester" ) {
@@ -408,20 +407,22 @@ TEST_CASE( "close_tests", "eosio_token_tester" ) {
     //     ("balance", "1000 CERO")
     // );
 
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "issue"_n,
-        "alice"_n
-    ).send("alice"_n, asset(1000, symbol("CERO", 0)), string(""));
+        "alice"_n, asset(1000, symbol("CERO", 0)), string("")
+    ).send();
 
     CHECK(t.get_balance("alice"_n, "eosio.token"_n, "CERO") == 1000);
 
     // BOOST_REQUIRE_EQUAL( success(), transfer( "alice"_n, "bob"_n, asset::from_string("1000 CERO"), "hola" ) );
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "transfer"_n,
-        "alice"_n
-    ).send("alice"_n, "bob"_n, asset(1000, symbol("CERO", 0)), string("hola"));
+        "alice"_n, "bob"_n, asset(1000, symbol("CERO", 0)), string("hola")
+    ).send();
 
     // alice_balance = get_account("alice"_n, "0,CERO");
     // REQUIRE_MATCHING_OBJECT( alice_balance, mvo()
@@ -430,11 +431,12 @@ TEST_CASE( "close_tests", "eosio_token_tester" ) {
     CHECK(t.get_balance("alice"_n, "eosio.token"_n, "CERO") == 0);
 
     // BOOST_REQUIRE_EQUAL( success(), close( "alice"_n, "0,CERO" ) );
-    t.new_action(
+    t.new_action_sender().add_action(
+        "alice"_n,
         "eosio.token"_n,
         "close"_n,
-        "alice"_n
-    ).send("alice"_n, symbol("CERO", 0));
+        "alice"_n, symbol("CERO", 0)
+    ).send();
     // alice_balance = get_account("alice"_n, "0,CERO");
     // BOOST_REQUIRE_EQUAL(true, alice_balance.is_null() );
     CHECK(!t.get_balance_ex("alice"_n, "eosio.token"_n, "CERO").has_value());

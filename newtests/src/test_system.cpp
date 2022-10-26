@@ -18,7 +18,7 @@ constexpr symbol core_symbol = symbol("EOS", 4);
 void update_auth(ChainTester& t, string pub_key) {
     eosio::pack(std::make_tuple(asset(0, symbol("EOS", 4))));
     auto auth = create_authority(pub_key, permission_level_weight{{"testapi"_n, "eosio.code"_n}, 1});
-    t.push_action("eosio"_n, "updateauth"_n, std::make_tuple("testapi"_n, "active"_n, "owner"_n, auth), "testapi"_n);
+    t.push_action("testapi"_n, "eosio"_n, "updateauth"_n, std::make_tuple("testapi"_n, "active"_n, "owner"_n, auth));
     t.produce_block();
 }
 
@@ -26,13 +26,13 @@ void create_accounts(ChainTester& t, std::vector<name>&& accounts ) {
     auto auth = create_authority("EOS6AjF6hvF7GSuSd4sCgfPKq5uWaXvGM2aQtEUCwmEHygQaqxBSV");
     for (auto& account: accounts) {
         auto args = std::make_tuple("eosio"_n, account, auth, auth);
-        t.push_action("eosio"_n, "newaccount"_n, args, "eosio"_n);
+        t.push_action( "eosio"_n, "eosio"_n, "newaccount"_n, args);
     }
 }
 
 void create_core_token(ChainTester& t) {
-    t.push_action("eosio.token"_n, "create"_n, std::make_tuple("eosio"_n, asset(100000000000000, core_symbol)), "eosio.token"_n);
-    t.push_action("eosio.token"_n, "issue"_n, std::make_tuple("eosio"_n, asset(100000000000000, core_symbol), string("")), "eosio"_n);
+    t.push_action("eosio.token"_n, "eosio.token"_n, "create"_n, std::make_tuple("eosio"_n, asset(100000000000000, core_symbol)));
+    t.push_action("eosio"_n, "eosio.token"_n, "issue"_n, std::make_tuple("eosio"_n, asset(100000000000000, core_symbol), string("")));
     CHECK(t.get_balance("eosio"_n, "eosio.token"_n, "EOS") == 100000000000000);
 }
 
@@ -136,6 +136,9 @@ TEST_CASE( "test system", "[chain]" ) {
     basic_setup(t);
 
     t.deploy_contract("eosio"_n, ACTIVATE_WASM, ACTIVATE_ABI);
+    
+    auto sender = t.new_action_sender();
+    sender.add_action("eosio"_n, "init"_n, "eosio"_n, string("hello"));
 
     vector<string> feature_digests = {
         "1a99a59d87e06e09ec5b028a9cbb7749b4a5ad8819004365d02dc4379a8b7241", //ONLY_LINK_TO_EXISTING_PERMISSION" 
@@ -168,6 +171,6 @@ TEST_CASE( "test system", "[chain]" ) {
     t.enable_debug_contract("eosio"_n, true);
 
     t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
-    t.push_action("eosio"_n, "init"_n, std::make_tuple(unsigned_int(0), core_symbol), "eosio"_n);
+    t.push_action("eosio"_n, "eosio"_n, "init"_n, std::make_tuple(unsigned_int(0), core_symbol));
     t.produce_block();
 }
