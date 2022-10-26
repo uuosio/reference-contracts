@@ -1,3 +1,5 @@
+![build](https://github.com/uuosio/reference-contracts/actions/workflows/pr-any.yml/badge.svg?event=push)
+[![codecov](https://codecov.io/gh/uuosio/reference-contracts/branch/main/graph/badge.svg?token=CTPFwVHRdt)](https://codecov.io/gh/uuosio/reference-contracts)
 # Reference contracts
 
 Reference contracts are a collection of contracts deployable to an [Antelope](https://github.com/AntelopeIO) blockchain which implements a lot of critical functionality that goes beyond what is provided by the base Antelope protocol.
