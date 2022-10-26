@@ -61,12 +61,16 @@ jobs:
           cd build
           CXX=clang++ CC=clang cmake -DENABLE_COVERAGE=TRUE -DCMAKE_BUILD_TYPE=Debug -Dcdt_DIR=`cdt-get-dir` -GNinja ..
           ninja --verbose
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: test
         run: |
           cd build
           TEST_COVERAGE=1 ./newtests/contracts_tests
-          llvm-cov gcov `find . -name "*.gcda"`
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          gcov: true
+      - name: upload coverage file to codecov
+        run: |
+          cd build
+          /usr/lib/llvm-14/bin/llvm-cov gcov `find . -name "*.gcda"`
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov
