@@ -2,7 +2,7 @@ name: Ubuntu 20.04
 on:
   push:
     branches:
-      - main
+      # - main
       - "release/*"
   pull_request:
     types: [assigned, opened, synchronize, reopened, labeled]

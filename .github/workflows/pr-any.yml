@@ -1,0 +1,72 @@
+name: PR
+on:
+  pull_request:
+  push:
+    branches: [ main, no-cdt ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr:
+    strategy:
+      matrix:
+        python-version: [3.9]
+        step: ['test']
+        # step: ['lint', 'test:chain']
+    name: ${{ matrix.step }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up Clang
+        uses: egor-tensin/setup-clang@v1
+        with:
+          version: 14
+          platform: x64
+      - name: show clang version
+        run: |
+          clang --version
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          python3 -m pip install -U pip setuptools
+      - name: Install cdt
+        run: |
+          python3 -m pip install -U eoscdt
+          eoscdt check
+      - name: Install boost
+        run: |
+          sudo apt-get install libboost-all-dev
+          sudo apt-get install ninja-build
+      - name: Install llvm
+        run: |
+          sudo apt install llvm
+      - name: Install EOS test framework
+        run: |
+          python3 -m pip install ipyeos
+      - name: Run eos-debugger
+        run: |
+          PYTHON_SHARED_LIB_PATH=${{ env.pythonLocation }}/lib/libpython3.9.so eos-debugger &
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          CXX=clang++ CC=clang cmake -DCMAKE_BUILD_TYPE=Debug -Dcdt_DIR=`cdt-get-dir` -GNinja ..
+          ninja --verbose
+      - name: test
+        run: |
+          cd build
+          TEST_COVERAGE=1 ./newtests/contracts_tests
+          llvm-cov gcov `find . -name "*.gcda"`
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          gcov: true
