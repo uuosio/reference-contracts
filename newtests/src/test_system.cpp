@@ -132,7 +132,7 @@ void basic_setup(ChainTester& t) {
 TEST_CASE( "test system", "[chain]" ) {
     ChainTester t(false);
     set_native_apply(system_native_apply);
-    t.enable_debug_contract("eosio"_n, true);
+    t.enable_debug_contract("eosio"_n, false);
     basic_setup(t);
 
     t.deploy_contract("eosio"_n, ACTIVATE_WASM, ACTIVATE_ABI);
@@ -165,8 +165,8 @@ TEST_CASE( "test system", "[chain]" ) {
     }
     t.produce_block();
 
-    t.enable_debug_contract("eosio"_n, false);
+    t.enable_debug_contract("eosio"_n, true);
 
-    t.deploy_contract("eosio"_n, BIOS_WASM, BIOS_ABI);
+    t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
     t.produce_block();
 }
