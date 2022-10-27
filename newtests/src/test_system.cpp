@@ -8,6 +8,7 @@
 #include <chaintester/permission.hpp>
 #include <chaintester/base58.hpp>
 
+#include "test_symbol.hpp"
 #include "config.hpp"
 #include "test.h"
 
@@ -43,7 +44,10 @@ void create_core_token(ChainTester& t) {
 //   std::string permissions;
 // };
 
-void create_account_with_resources( const name a, const name creator, uint32_t ram_bytes = 8000 ) {
+void create_account_with_resources(ChainTester& tester, const name a, const name creator, asset ramfunds, bool multisig) {
+    WARN("ramfunds:");
+    WARN(ramfunds.amount);
+
     auto owner_auth = authority{
         .threshold = 1,
         .keys = {{
@@ -79,6 +83,7 @@ void create_account_with_resources( const name a, const name creator, uint32_t r
             new_account
         }
     };
+    auto sender = tester.new_action_sender();
     // signed_transaction trx;
     // set_transaction_headers(trx);
 
@@ -92,13 +97,36 @@ void create_account_with_resources( const name a, const name creator, uint32_t r
     //                             .owner    = owner_auth,
     //                             .active   = authority( get_public_key( a, "active" ) )
     //                         });
-
+    sender.add_action(
+        creator,
+        "eosio"_n,
+        "newaccount"_n,
+        new_account
+    );
     // trx.actions.emplace_back( get_action( config::system_account_name, "buyrambytes"_n, vector<permission_level>{{creator,config::active_name}},
     //                                     mvo()
     //                                     ("payer", creator)
     //                                     ("receiver", a)
     //                                     ("bytes", ram_bytes) )
     //                         );
+    // void buyram( const name& payer, const name& receiver, const asset& quant );
+    sender.add_action(
+        creator,
+        "eosio"_n,
+        "buyram"_n,
+        creator, a, ramfunds
+    );
+//    void system_contract::delegatebw( const name& from, const name& receiver,
+//                                      const asset& stake_net_quantity,
+//                                      const asset& stake_cpu_quantity, bool transfer )
+    sender.add_action(
+        creator,
+        "eosio"_n,
+        "delegatebw"_n,
+        std::make_tuple(creator, a, core_sym::from_string("10.0000"), core_sym::from_string("10.0000"), false)
+    );
+    auto ret = sender.send();
+    // WARN(ret->to_string());
     // trx.actions.emplace_back( get_action( config::system_account_name, "delegatebw"_n, vector<permission_level>{{creator,config::active_name}},
     //                                     mvo()
     //                                     ("from", creator)
@@ -122,24 +150,14 @@ void basic_setup(ChainTester& t) {
     t.deploy_contract("eosio.token"_n, TOKEN_WASM, TOKEN_ABI);
     t.produce_block();
     create_core_token(t);
-
-    // Assumes previous setup steps were done with core token symbol set to CORE_SYM
-    // create_account_with_resources( "alice1111111"_n, config::system_account_name, core_sym::from_string("1.0000"), false );
-    // create_account_with_resources( "bob111111111"_n, config::system_account_name, core_sym::from_string("0.4500"), false );
-    // create_account_with_resources( "carol1111111"_n, config::system_account_name, core_sym::from_string("1.0000"), false );
 }
 
 TEST_CASE( "test system", "[chain]" ) {
     ChainTester t(false);
-    set_native_apply(system_native_apply);
     t.enable_debug_contract("eosio"_n, false);
-    basic_setup(t);
 
     t.deploy_contract("eosio"_n, ACTIVATE_WASM, ACTIVATE_ABI);
     
-    auto sender = t.new_action_sender();
-    sender.add_action("eosio"_n, "init"_n, "eosio"_n, string("hello"));
-
     vector<string> feature_digests = {
         "1a99a59d87e06e09ec5b028a9cbb7749b4a5ad8819004365d02dc4379a8b7241", //ONLY_LINK_TO_EXISTING_PERMISSION" 
         "2652f5f96006294109b3dd0bbde63693f55324af452b799ee137a81a905eed25", //"FORWARD_SETCODE"
@@ -163,14 +181,28 @@ TEST_CASE( "test system", "[chain]" ) {
 
     for (auto& digest: feature_digests) {
         auto raw = hex2bytes(digest);
-        t.new_action("eosio"_n, "activate"_n, "eosio"_n).send_raw(raw);
-        // auto ret = t.push_action("eosio"_n, "activate"_n, hex2bytes(digest), "eosio"_n);
+        eosio::checksum256 feature_digest;
+        eosio::datastream<const char*> ds((char*)raw.data(), raw.size());
+        ds >> feature_digest;
+//        void bios::activate( const eosio::checksum256& feature_digest )
+        t.push_action("eosio"_n, "eosio"_n, "activate"_n, feature_digest);
     }
     t.produce_block();
 
-    t.enable_debug_contract("eosio"_n, true);
-
     t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
+    t.enable_debug_contract("eosio"_n, true);
+    set_native_apply(system_native_apply);
+
+    basic_setup(t);
+
     t.push_action("eosio"_n, "eosio"_n, "init"_n, std::make_tuple(unsigned_int(0), core_symbol));
     t.produce_block();
+
+    // Assumes previous setup steps were done with core token symbol set to CORE_SYM
+    create_account_with_resources(t, "alice1111111"_n, config::system_account_name, core_sym::from_string("1.0000"), false );
+    create_account_with_resources(t, "bob111111111"_n, config::system_account_name, core_sym::from_string("0.4500"), false );
+    create_account_with_resources(t, "carol1111111"_n, config::system_account_name, core_sym::from_string("1.0000"), false );
+    WARN(t.get_balance("eosio"_n));
+    auto info = t.get_account("alice1111111"_n);
+    WARN(info->to_string());
 }

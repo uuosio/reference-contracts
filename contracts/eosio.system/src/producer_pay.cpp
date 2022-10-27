@@ -9,7 +9,6 @@ namespace eosiosystem {
 
    void system_contract::onblock( ignore<block_header> ) {
       using namespace eosio;
-
       require_auth(get_self());
 
       // Deserialize needed fields from block header.
