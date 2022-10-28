@@ -13,7 +13,7 @@ using share_type          = int64_t;
 constexpr name test_symbol_name = name(symbol_code("TKN").raw());
 
 void init_test(ChainTester& t) {
-    set_native_apply(token_native_apply);
+    set_native_apply("eosio.token"_n, token_native_apply);
 
     const char * TEST_COVERAGE = std::getenv("TEST_COVERAGE");
     if (TEST_COVERAGE == nullptr || string("") == TEST_COVERAGE || string("0") == TEST_COVERAGE || string("FALSE") == TEST_COVERAGE) {

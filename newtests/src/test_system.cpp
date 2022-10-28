@@ -33,8 +33,8 @@ void create_accounts(ChainTester& t, std::vector<name>&& accounts ) {
 
 void create_core_token(ChainTester& t) {
     t.push_action("eosio.token"_n, "eosio.token"_n, "create"_n, std::make_tuple("eosio"_n, asset(100000000000000, core_symbol)));
-    t.push_action("eosio"_n, "eosio.token"_n, "issue"_n, std::make_tuple("eosio"_n, asset(100000000000000, core_symbol), string("")));
-    CHECK(t.get_balance("eosio"_n, "eosio.token"_n, "EOS") == 100000000000000);
+    t.push_action("eosio"_n, "eosio.token"_n, "issue"_n, std::make_tuple("eosio"_n, asset(10000000000000, core_symbol), string("")));
+    CHECK(t.get_balance("eosio"_n, "eosio.token"_n, "EOS") == 10000000000000);
 }
 
 // struct TxAction {
@@ -152,10 +152,7 @@ void basic_setup(ChainTester& t) {
     create_core_token(t);
 }
 
-TEST_CASE( "test system", "[chain]" ) {
-    ChainTester t(false);
-    t.enable_debug_contract("eosio"_n, false);
-
+void activate_features(ChainTester& t) {
     t.deploy_contract("eosio"_n, ACTIVATE_WASM, ACTIVATE_ABI);
     
     vector<string> feature_digests = {
@@ -188,21 +185,41 @@ TEST_CASE( "test system", "[chain]" ) {
         t.push_action("eosio"_n, "eosio"_n, "activate"_n, feature_digest);
     }
     t.produce_block();
+}
 
-    t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
-    t.enable_debug_contract("eosio"_n, true);
-    set_native_apply(system_native_apply);
-
-    basic_setup(t);
-
-    t.push_action("eosio"_n, "eosio"_n, "init"_n, std::make_tuple(unsigned_int(0), core_symbol));
+void remaining_setup(ChainTester& t) {
     t.produce_block();
 
     // Assumes previous setup steps were done with core token symbol set to CORE_SYM
     create_account_with_resources(t, "alice1111111"_n, config::system_account_name, core_sym::from_string("1.0000"), false );
     create_account_with_resources(t, "bob111111111"_n, config::system_account_name, core_sym::from_string("0.4500"), false );
     create_account_with_resources(t, "carol1111111"_n, config::system_account_name, core_sym::from_string("1.0000"), false );
+
+    check( core_sym::from_string("1000000000.0000").amount == t.get_balance("eosio"_n)  + 
+        t.get_balance("eosio.ramfee"_n) + 
+        t.get_balance("eosio.stake"_n) + 
+        t.get_balance("eosio.ram"_n),
+    "bad value");
+}
+
+#include <dlfcn.h>
+
+TEST_CASE( "test system", "[chain]" ) {
+    ChainTester t(false);
+    t.enable_debug_contract("eosio"_n, false);
+    activate_features(t);
+
+    t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
+    t.enable_debug_contract("eosio"_n, true);
+    set_native_apply("eosio"_n, system_native_apply);
+
+    basic_setup(t);
+
+    t.push_action("eosio"_n, "eosio"_n, "init"_n, std::make_tuple(unsigned_int(0), core_symbol));
+    remaining_setup(t);
+
     WARN(t.get_balance("eosio"_n));
     auto info = t.get_account("alice1111111"_n);
     WARN(info->to_string());
+    WARN(info->to_pretty_string());
 }
