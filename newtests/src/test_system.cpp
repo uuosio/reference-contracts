@@ -211,7 +211,7 @@ TEST_CASE( "test system", "[chain]" ) {
 
     t.deploy_contract("eosio"_n, SYSTEM_WASM, SYSTEM_ABI);
     t.enable_debug_contract("eosio"_n, true);
-    set_native_apply("eosio"_n, system_native_apply);
+    t.set_native_apply("eosio"_n, system_native_apply);
 
     basic_setup(t);
 
